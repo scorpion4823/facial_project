@@ -1,17 +1,23 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
-    libgl1 \
-    libglib2.0-0 \
+    build-essential \
+    cmake \
     libopenblas-dev \
+    liblapack-dev \
+    libx11-dev \
+    python3-dev \
+    gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-RUN pip install --upgrade pip
+RUN pip install --upgrade pip setuptools wheel
 
-RUN pip install --no-cache-dir \
-    https://github.com/Stark-Industries0417/dlib_wheels/releases/download/v19.24.1/dlib-19.24.1-cp311-cp311-linux_x86_64.whl
+# Compiler dlib avec 1 seul job pour limiter la mémoire
+RUN pip install --no-cache-dir --global-option=build_ext \
+    --global-option="-j1" dlib==19.24.2
 
 RUN pip install --no-cache-dir face-recognition
 
