@@ -2,9 +2,8 @@ from django.shortcuts import render, redirect
 from .models import Person
 import numpy as np
 import cv2
-from PIL import Image
-from deepface import DeepFace
 from .forms import PersonForm
+import face_recognition
 import os
 import tempfile
 
@@ -24,6 +23,12 @@ def index(request):
     return render(request, 'index.html')
 
 
+def load_image(path):
+    image = cv2.imread(path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    return np.ascontiguousarray(image, dtype=np.uint8)
+
+
 def save_temp_image(image_file):
     suffix = os.path.splitext(image_file.name)[-1] or '.jpg'
     temp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -36,7 +41,6 @@ def save_temp_image(image_file):
 def recognize_person(request):
     result = None
     person_found = None
-    debug_info = []  # Pour voir ce qui se passe
 
     if request.method == 'POST' and request.FILES.get('image'):
         uploaded_image = request.FILES['image']
@@ -44,48 +48,40 @@ def recognize_person(request):
 
         try:
             temp_path = save_temp_image(uploaded_image)
-            persons = Person.objects.all()
+            unknown_image = load_image(temp_path)
+            unknown_encodings = face_recognition.face_encodings(unknown_image)
 
-            if not persons:
-                result = "Aucune personne enregistrée dans la base ❌"
+            if not unknown_encodings:
+                result = "Aucun visage détecté ❌"
             else:
+                unknown_encoding = unknown_encodings[0]
+                persons = Person.objects.all()
                 best_match = None
-                best_distance = float('inf')
+                best_distance = 0.55
 
                 for person in persons:
                     try:
-                        verification = DeepFace.verify(
-                            img1_path=temp_path,
-                            img2_path=person.image.path,
-                            model_name="Facenet",
-                            detector_backend="opencv",
-                            enforce_detection=False,
-                        )
+                        known_image = load_image(person.image.path)
+                        known_encodings = face_recognition.face_encodings(known_image)
 
-                        distance = verification["distance"]
-                        verified = verification["verified"]
-                        threshold = verification["threshold"]
+                        if not known_encodings:
+                            continue
 
-                        # Log pour debug
-                        debug_info.append(
-                            f"{person} → distance: {round(distance, 4)} / seuil: {threshold} → {'✅' if verified else '❌'}"
-                        )
+                        distance = face_recognition.face_distance(
+                            [known_encodings[0]], unknown_encoding
+                        )[0]
 
                         if distance < best_distance:
                             best_distance = distance
-                            if verified:
-                                best_match = person
+                            best_match = person
 
-                    except FileNotFoundError:
-                        continue
-                    except Exception as e:
-                        debug_info.append(f"Erreur pour {person}: {str(e)}")
+                    except Exception:
                         continue
 
                 if best_match:
                     person_found = best_match
                 else:
-                    result = f"Personne non reconnue ❌ (meilleure distance: {round(best_distance, 4)})"
+                    result = "Personne non reconnue ❌"
 
         except Exception as e:
             result = f"Erreur : {str(e)}"
@@ -97,5 +93,4 @@ def recognize_person(request):
     return render(request, 'recognize.html', {
         'result': result,
         'person': person_found,
-        'debug_info': debug_info,  # À afficher temporairement dans le template
     })
