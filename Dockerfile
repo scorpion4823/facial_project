@@ -10,8 +10,10 @@ WORKDIR /app
 COPY requirements.txt .
 
 RUN pip install --upgrade pip
-
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Télécharger le modèle Facenet pendant le build
+RUN python -c "from deepface import DeepFace; DeepFace.build_model('Facenet')"
 
 COPY . .
 
