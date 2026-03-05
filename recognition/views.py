@@ -60,7 +60,6 @@ def recognize_person(request):
                             model_name="Facenet",
                             detector_backend="opencv",
                             enforce_detection=False,
-                            silent=True
                         )
 
                         distance = verification["distance"]
