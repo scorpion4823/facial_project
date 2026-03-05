@@ -15,11 +15,16 @@ WORKDIR /app
 
 RUN pip install --upgrade pip setuptools wheel
 
-# Limiter cmake à 1 thread pour éviter le manque de mémoire
 ENV MAKEFLAGS="-j1"
 ENV CMAKE_BUILD_PARALLEL_LEVEL=1
 
-RUN pip install --no-cache-dir dlib==19.24.2
+# Patcher dlib pour corriger l'incompatibilité cmake
+RUN pip install --no-cache-dir cmake
+RUN pip download dlib==19.24.2 --no-binary dlib -d /tmp/dlib_src
+RUN cd /tmp/dlib_src && tar -xzf dlib-19.24.2.tar.gz
+RUN sed -i 's/cmake_minimum_required(VERSION 2.8.12)/cmake_minimum_required(VERSION 3.5)/g' \
+    /tmp/dlib_src/dlib-19.24.2/dlib/external/pybind11/CMakeLists.txt
+RUN cd /tmp/dlib_src/dlib-19.24.2 && pip install --no-cache-dir .
 
 RUN pip install --no-cache-dir face-recognition
 
