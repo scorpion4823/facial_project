@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --upgrade pip
+
+RUN pip install --upgrade pip setuptools wheel
 RUN pip install cmake
 RUN pip install dlib==19.24.2
 RUN pip install face-recognition
@@ -24,5 +25,4 @@ RUN python manage.py collectstatic --no-input
 
 EXPOSE 10000
 
-CMD gunicorn facial_project.wsgi:application --bind 0.0.0.0:$PORT
-```
+CMD ["gunicorn", "facial_project.wsgi:application", "--bind", "0.0.0.0:10000"]
