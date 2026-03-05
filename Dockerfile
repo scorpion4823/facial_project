@@ -1,16 +1,8 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
     libopenblas-dev \
     liblapack-dev \
-    libx11-dev \
-    libgtk-3-dev \
-    libboost-all-dev \
-    python3-dev \
-    gcc \
-    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -19,10 +11,9 @@ COPY requirements.txt .
 
 RUN pip install --upgrade pip setuptools wheel
 
-# Fix CMake compatibility issue
-ENV CMAKE_POLICY_VERSION_MINIMUM=3.5
-
-RUN pip install --no-cache-dir dlib==19.24.6
+# Installer dlib via wheel précompilé (pas de compilation)
+RUN pip install --no-cache-dir \
+    "dlib @ https://github.com/z-mahmud22/Dlib_Windows_Python3.x/releases/download/v19.24.2/dlib-19.24.2-cp311-cp311-linux_x86_64.whl"
 
 RUN pip install --no-cache-dir face-recognition
 
