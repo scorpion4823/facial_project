@@ -15,9 +15,11 @@ WORKDIR /app
 
 RUN pip install --upgrade pip setuptools wheel
 
-# Compiler dlib avec 1 seul job pour limiter la mémoire
-RUN pip install --no-cache-dir --global-option=build_ext \
-    --global-option="-j1" dlib==19.24.2
+# Limiter cmake à 1 thread pour éviter le manque de mémoire
+ENV MAKEFLAGS="-j1"
+ENV CMAKE_BUILD_PARALLEL_LEVEL=1
+
+RUN pip install --no-cache-dir dlib==19.24.2
 
 RUN pip install --no-cache-dir face-recognition
 
