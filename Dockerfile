@@ -19,4 +19,4 @@ RUN python manage.py collectstatic --no-input
 
 EXPOSE 10000
 
-CMD ["gunicorn", "facial_project.wsgi:application", "--bind", "0.0.0.0:10000"]
+CMD ["gunicorn", "facial_project.wsgi:application", "--bind", "0.0.0.0:10000", "--timeout", "300", "--workers", "1"]

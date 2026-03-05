@@ -75,7 +75,7 @@ def recognize_person(request):
                         verification = DeepFace.verify(
                             img1_path=temp_path,
                             img2_path=person.image.path,
-                            model_name="VGG-Face",
+                            model_name="Facenet",
                             enforce_detection=False,
                             silent=True
                         )
