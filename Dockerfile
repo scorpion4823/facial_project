@@ -11,12 +11,6 @@ COPY requirements.txt .
 
 RUN pip install --upgrade pip
 
-RUN pip install --no-cache-dir tensorflow==2.13.0
-
-RUN pip install --no-cache-dir tf-keras==2.15.1
-
-RUN pip install --no-cache-dir deepface==0.0.93
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
